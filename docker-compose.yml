@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: osms_postgres
+    environment:
+      POSTGRES_USER: osms_user
+      POSTGRES_PASSWORD: osms123
+      POSTGRES_DB: osms_store
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:6-alpine
+    container_name: osms_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  backend:
+    container_name: osms_backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=osms_user
+      - DB_PASSWORD=osms123
+      - DB_NAME=osms_store
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

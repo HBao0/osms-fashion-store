@@ -1,0 +1,5 @@
+{
+  "name": "OSMS Fashion Store",
+  "description": "A modern, high-performance e-commerce web application for a fashion store, built with React and TypeScript. It features a dynamic product catalog generated using Faker.js, with advanced filtering and search capabilities to simulate a real-world shopping experience.",
+  "requestFramePermissions": []
+}
