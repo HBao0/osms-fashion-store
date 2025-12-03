@@ -105,7 +105,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchT
                     <input
                         id="email-register"
                         name="email"
-                        type="email"
+                        type="text"
                         disabled={isLoading}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
