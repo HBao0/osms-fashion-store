@@ -41,23 +41,89 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
         fileInputRef.current?.click();
     };
 
+    // --- VALIDATION LOGIC ---
+
+    // 1. Validate Password (Độ mạnh mật khẩu)
+    const validatePassword = (password: string) => {
+        if (password.length < 8) return "Mật khẩu mới phải có ít nhất 8 ký tự.";
+        if (password.length > 30) return "Mật khẩu mới không được vượt quá 30 ký tự.";
+        if (!/[a-z]/.test(password)) return "Mật khẩu phải có ít nhất 1 chữ thường.";
+        if (!/[A-Z]/.test(password)) return "Mật khẩu phải có ít nhất 1 chữ hoa.";
+        if (!/\d/.test(password)) return "Mật khẩu phải có ít nhất 1 số.";
+        if (!/[^A-Za-z0-9]/.test(password)) return "Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#...).";
+        return null;
+    };
+
+    // 2. Validate Profile (Tên, Email, SĐT, Tuổi)
+    const validateProfile = () => {
+        // Validate Tên
+        if (!formData.name || formData.name.trim().length < 3 || formData.name.trim().length > 30) {
+            toast.error('Tên hiển thị phải từ 3 đến 30 ký tự.');
+            return false;
+        }
+
+        // Validate Email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email || !emailRegex.test(formData.email)) {
+            toast.error('Email không đúng định dạng.');
+            return false;
+        }
+
+        // Validate Số điện thoại (Giả sử 8-11 số)
+        if (!formData.phone || formData.phone.length < 8 || formData.phone.length > 11) {
+            toast.error('Số điện thoại không hợp lệ (8-11 số).');
+            return false;
+        }
+
+        // Validate Tuổi (>= 18)
+        if (formData.birthDate) {
+            const today = new Date();
+            const birthDate = new Date(formData.birthDate);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            if (age < 18) {
+                toast.error('Bạn phải đủ 18 tuổi để cập nhật thông tin này.');
+                return false;
+            }
+             if (age > 100) {
+                toast.error('Năm sinh không hợp lệ.');
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     const handleProfileSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Don't submit password data with profile update
+        
+        // Chạy validate toàn bộ profile
+        if (!validateProfile()) return;
+
+        // Tách password ra khỏi dữ liệu update profile để tránh gửi nhầm
         const { password, ...profileData } = formData;
         onUpdateUser(profileData);
     };
 
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // 1. Kiểm tra rỗng
         if (!passwordData.newPassword || !passwordData.currentPassword) {
-            toast.error('Vui lòng nhập cả mật khẩu hiện tại và mật khẩu mới.');
+            toast.error('Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.');
             return;
         }
-        if (passwordData.newPassword.length < 6) {
-             toast.error('Mật khẩu mới phải có ít nhất 6 ký tự.');
+
+        // 2. Validate độ mạnh mật khẩu
+        const errorMsg = validatePassword(passwordData.newPassword);
+        if (errorMsg) {
+            toast.error(errorMsg);
             return;
         }
+
         const loadingToast = toast.loading('Đang đổi mật khẩu...');
         try {
             await api.changePassword(user.id, passwordData);
@@ -68,10 +134,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
         }
     };
     
-    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
 
     return (
         <div>
+            {/* --- Avatar & Header Section --- */}
             <div className="flex flex-col sm:flex-row items-center gap-6 mb-8">
                  <div className="relative group">
                     <img 
@@ -79,10 +146,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                         alt="Avatar" 
                         className="w-24 h-24 rounded-full object-cover border-2 border-border" 
                     />
-                    <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-opacity">
-                        <button onClick={triggerFileSelect} className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm bg-black/70 px-3 py-1 rounded-full">
+                    <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-opacity cursor-pointer" onClick={triggerFileSelect}>
+                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm bg-black/70 px-3 py-1 rounded-full">
                             Thay đổi
-                        </button>
+                        </span>
                     </div>
                 </div>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
@@ -92,6 +159,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                 </div>
             </div>
             
+            {/* --- Profile Form --- */}
             <form onSubmit={handleProfileSubmit} className="space-y-4 max-w-lg pb-8 border-b border-border">
                 <div>
                     <label className="block text-sm font-medium text-text-light">Họ và tên</label>
@@ -102,6 +170,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                         onChange={handleChange}
                         className="mt-1 block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Độ dài từ 3 đến 30 ký tự.</p>
                 </div>
 
                 <div>
@@ -118,7 +187,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
 
                 <div>
                     <label className="block text-sm font-medium text-text-light">Số điện thoại</label>
-                    <PhoneInput name="phone" value={formData.phone} onChange={(v: string) => setFormData({ ...formData, phone: v })} placeholder="Nhập số điện thoại" className="mt-1 w-full" />
+                    <PhoneInput 
+                        name="phone" 
+                        value={formData.phone} 
+                        onChange={(v: string) => setFormData({ ...formData, phone: v })} 
+                        placeholder="Nhập số điện thoại" 
+                        className="mt-1 w-full" 
+                    />
                 </div>
 
                 <div>
@@ -126,19 +201,20 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                     <input
                         type="date"
                         name="birthDate"
-                        value={formData.birthDate ? formData.birthDate.split('T')[0] : ''}
+                        value={formData.birthDate ? formData.birthDate.toString().split('T')[0] : ''}
                         onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
                         className="mt-1 block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                     />
                 </div>
 
                 <div>
-                    <button type="submit" className="bg-primary text-background font-bold py-2 px-4 rounded hover:bg-primary-dark transition-colors">
+                    <button type="submit" className="bg-primary text-white font-bold py-2 px-4 rounded hover:bg-primary-dark transition-colors shadow-md">
                         Lưu thông tin
                     </button>
                 </div>
             </form>
 
+            {/* --- Password Form --- */}
             <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-lg pt-8">
                 <h3 className="text-xl font-bold">Đổi mật khẩu</h3>
                  <div>
@@ -162,9 +238,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                         className="mt-1 block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                         required
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                        * 8-30 ký tự, gồm hoa, thường, số và ký tự đặc biệt.
+                    </p>
                 </div>
                  <div>
-                    <button type="submit" className="bg-secondary-light text-text font-bold py-2 px-4 rounded hover:bg-border transition-colors">
+                    <button type="submit" className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded hover:bg-gray-300 transition-colors">
                         Lưu thay đổi
                     </button>
                 </div>

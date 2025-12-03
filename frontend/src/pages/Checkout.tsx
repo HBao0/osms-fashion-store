@@ -3,6 +3,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Order } from '../types';
 import PhoneInput from '../components/PhoneInput';
+import toast from 'react-hot-toast';
 
 type PaymentMethod = 'COD' | 'Online';
 
@@ -43,14 +44,71 @@ export const Checkout: React.FC<CheckoutProps> = ({ onPlaceOrder, onBack }) => {
         // Client-side validation to surface issues early
         if (!cartItems || cartItems.length === 0) {
             // No items in cart
-            alert('Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi đặt hàng.');
+            toast.error('Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi đặt hàng.');
             return;
         }
         if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address) {
-            alert('Vui lòng điền đầy đủ họ tên, số điện thoại và địa chỉ giao hàng.');
+            toast.error('Vui lòng điền đầy đủ họ tên, số điện thoại và địa chỉ giao hàng.');
+            return;
+        }
+        if(shippingInfo.name.length < 10|| shippingInfo.name.length > 60 ) {
+            toast.error('Họ và tên phải có độ dài từ 10 đến 60 ký tự.');
+            return;
+        }
+        if(!/^[a-zA-ZÀ-ỹ\s]+$/.test(shippingInfo.name)) {
+            toast.error('Họ và tên phải chỉ chứa chữ cái và khoảng trắng.');
+            return;
+        }
+        if(!shippingInfo.phone) {
+            toast.error('Số điện thoại không được để trống');
+            return;
+        }
+        if(!/^[0-9()+-\s]+$/.test(shippingInfo.phone)) {
+            toast.error('Số điện thoại chỉ được chứa chữ số và các ký tự + - ( ) .');
+            return;
+        }
+        if(shippingInfo.phone.length < 9 ) {
+            toast.error('Số điện thoại không hợp lệ.');
+            return;
+        }
+        if(!shippingInfo.address) {
+            toast.error('Địa chỉ không được để trống');
+            return;
+        }
+        if(shippingInfo.address.length < 10 || shippingInfo.address.length > 100) {
+            toast.error('Địa chỉ phải có độ dài từ 10 đến 100 ký tự.');
+            return;
+        }
+        if(!shippingInfo.city) {
+            toast.error('Tỉnh/Thành phố không được để trống');
+            return;
+        }
+        if(shippingInfo.district.length < 10 || shippingInfo.district.length > 100) {
+            toast.error('Quận/Huyện phải có độ dài từ 10 đến 100 ký tự.');
+            return;
+        }
+        if(!shippingInfo.district) {
+            toast.error('Quận/Huyện không được để trống');
+            return;
+        }
+        if(shippingInfo.city.length < 10 || shippingInfo.city.length > 100) {
+            toast.error('Tỉnh/Thành phố phải có độ dài từ 10 đến 100 ký tự.');
+            return;
+        }
+        if(!shippingInfo.ward) {
+            toast.error('Phường/Xã không được để trống');
+            return;
+        }
+        if(shippingInfo.ward.length < 10 || shippingInfo.ward.length > 100) {
+            toast.error('Phường/Xã phải có độ dài từ 10 đến 100 ký tự.');
             return;
         }
 
+        if (paymentMethod === 'Online' && !paymentProvider) {
+            toast.error('Vui lòng chọn cổng thanh toán.');
+            return;
+        }
+        
         const orderDetails: Omit<Order, 'id' | 'date' | 'status' | 'userEmail'> & { paymentProvider?: string } = {
             items: cartItems,
             subtotal,

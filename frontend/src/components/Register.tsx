@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import toast from 'react-hot-toast';
+
 
 interface RegisterProps {
     onRegisterSuccess: () => void;
@@ -14,6 +16,32 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchT
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!name.trim()) {
+            toast.error("Vui lòng nhập họ và tên.");
+            return;
+        }
+
+        if (!email.trim()) {
+            toast.error("Vui lòng nhập địa chỉ Email.");
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            toast.error("Email không đúng định dạng");
+            return;
+        }
+
+        if (!password.trim()) {
+            toast.error("Vui lòng nhập mật khẩu.");
+            return;
+        }
+        if (password.length < 8) {
+            toast.error("Mật khẩu phải có ít nhất 8 ký tự.");
+            return;
+        }
+        
+
         const error = await register({ name, email, password });
         if (!error) {
             onRegisterSuccess();
@@ -30,7 +58,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchT
                         id="name"
                         name="name"
                         type="text"
-                        required
+                        // required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="mt-1 block w-full px-3 py-2 bg-background border border-secondary-light rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
@@ -42,7 +70,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchT
                         id="email-register"
                         name="email"
                         type="email"
-                        required
+                        // required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="mt-1 block w-full px-3 py-2 bg-background border border-secondary-light rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
@@ -54,7 +82,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onSwitchT
                         id="password-register"
                         name="password"
                         type="password"
-                        required
+                        // required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="mt-1 block w-full px-3 py-2 bg-background border border-secondary-light rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"

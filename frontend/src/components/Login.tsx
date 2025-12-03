@@ -33,7 +33,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSwitchToRegister
     }
 
         const error = await login(email, password);
-        // alert("Đăng nhập thành công!");
         if (!error) {
             onLoginSuccess();
         }

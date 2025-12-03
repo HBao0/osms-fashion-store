@@ -161,6 +161,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId, onBack }) => {
     const handleReviewSubmit = async (rating: number, comment: string) => {
         try {
             const newReview = await api.submitReview(productId, { rating, comment });
+            if(comment&&(comment.length < 20||comment.length>1000)){ 
+                toast.error('Đánh giá phải từ 20 đến 1000 ký tự.');
+                return;
+            }
             setReviews([newReview, ...reviews]); // Add new review to the top
             
             // Refetch the product to update its average rating on the page
