@@ -36,7 +36,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
             reader.readAsDataURL(file);
         }
     };
-    
+
     const triggerFileSelect = () => {
         fileInputRef.current?.click();
     };
@@ -68,13 +68,16 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
             toast.error('Email không đúng định dạng.');
             return false;
         }
+        const phone = formData.phone || "";
 
-        // Validate Số điện thoại (Giả sử 8-11 số)
-        if (!formData.phone || formData.phone.length < 8 || formData.phone.length > 11) {
-            toast.error('Số điện thoại không hợp lệ (8-11 số).');
+        // Lấy số local sau mã quốc gia
+        const localPhone = phone.replace(/^\+\d{1,4}\s?/, '');
+
+        // Chỉ cho phép 8–11 số
+        if (!/^\d{8,11}$/.test(localPhone)) {
+            toast.error("Số điện thoại không hợp lệ (phải chứa 8–11 số).");
             return false;
         }
-
         // Validate Tuổi (>= 18)
         if (formData.birthDate) {
             const today = new Date();
@@ -88,7 +91,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                 toast.error('Bạn phải đủ 18 tuổi để cập nhật thông tin này.');
                 return false;
             }
-             if (age > 100) {
+            if (age > 100) {
                 toast.error('Năm sinh không hợp lệ.');
                 return false;
             }
@@ -99,7 +102,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
 
     const handleProfileSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Chạy validate toàn bộ profile
         if (!validateProfile()) return;
 
@@ -110,7 +113,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
 
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // 1. Kiểm tra rỗng
         if (!passwordData.newPassword || !passwordData.currentPassword) {
             toast.error('Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.');
@@ -133,18 +136,18 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
             toast.error(error.message || 'Đổi mật khẩu thất bại.', { id: loadingToast });
         }
     };
-    
+
     const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
 
     return (
         <div>
             {/* --- Avatar & Header Section --- */}
             <div className="flex flex-col sm:flex-row items-center gap-6 mb-8">
-                 <div className="relative group">
-                    <img 
-                        src={formData.avatar || `https://ui-avatars.com/api/?name=${initials}&background=FBBF24&color=0d1117&size=96`} 
-                        alt="Avatar" 
-                        className="w-24 h-24 rounded-full object-cover border-2 border-border" 
+                <div className="relative group">
+                    <img
+                        src={formData.avatar || `https://ui-avatars.com/api/?name=${initials}&background=FBBF24&color=0d1117&size=96`}
+                        alt="Avatar"
+                        className="w-24 h-24 rounded-full object-cover border-2 border-border"
                     />
                     <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-opacity cursor-pointer" onClick={triggerFileSelect}>
                         <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm bg-black/70 px-3 py-1 rounded-full">
@@ -158,12 +161,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                     <p className="text-text-light text-center sm:text-left">{user.email}</p>
                 </div>
             </div>
-            
+
             {/* --- Profile Form --- */}
             <form onSubmit={handleProfileSubmit} className="space-y-4 max-w-lg pb-8 border-b border-border">
                 <div>
                     <label className="block text-sm font-medium text-text-light">Họ và tên</label>
-                    <input 
+                    <input
                         type="text"
                         name="name"
                         value={formData.name || ''}
@@ -187,12 +190,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
 
                 <div>
                     <label className="block text-sm font-medium text-text-light">Số điện thoại</label>
-                    <PhoneInput 
-                        name="phone" 
-                        value={formData.phone} 
-                        onChange={(v: string) => setFormData({ ...formData, phone: v })} 
-                        placeholder="Nhập số điện thoại" 
-                        className="mt-1 w-full" 
+                    <PhoneInput
+                        name="phone"
+                        value={formData.phone}
+                        onChange={(v: string) => setFormData({ ...formData, phone: v })}
+                        placeholder="Nhập số điện thoại"
+                        className="mt-1 w-full"
                     />
                 </div>
 
@@ -217,9 +220,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
             {/* --- Password Form --- */}
             <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-lg pt-8">
                 <h3 className="text-xl font-bold">Đổi mật khẩu</h3>
-                 <div>
+                <div>
                     <label className="block text-sm font-medium text-text-light">Mật khẩu hiện tại</label>
-                    <input 
+                    <input
                         type="password"
                         name="currentPassword"
                         value={passwordData.currentPassword}
@@ -230,7 +233,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-text-light">Mật khẩu mới</label>
-                    <input 
+                    <input
                         type="password"
                         name="newPassword"
                         value={passwordData.newPassword}
@@ -242,7 +245,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdateUser }) => {
                         * 8-30 ký tự, gồm hoa, thường, số và ký tự đặc biệt.
                     </p>
                 </div>
-                 <div>
+                <div>
                     <button type="submit" className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded hover:bg-gray-300 transition-colors">
                         Lưu thay đổi
                     </button>
